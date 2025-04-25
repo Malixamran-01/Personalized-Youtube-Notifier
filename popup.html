@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube Custom Notifier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #4285f4;
+      --primary-hover: #3367d6;
+      --danger-color: #ea4335;
+      --danger-hover: #d33426;
+      --success-color: #0f9d58;
+      --text-primary: #202124;
+      --text-secondary: #5f6368;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --border-color: #dadce0;
+      --shadow-sm: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+      --shadow-md: 0 2px 4px 0 rgba(60,64,67,0.3), 0 2px 6px 2px rgba(60,64,67,0.15);
+      --transition: all 0.2s ease-in-out;
+    }
+
+    /* Dark mode variables */
+    [data-theme="dark"] {
+      --primary-color: #4ade80;
+      --primary-hover: #22c55e;
+      --danger-color: #ef4444;
+      --danger-hover: #dc2626;
+      --success-color: #10b981;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --bg-primary: #1f2937;
+      --bg-secondary: #111827;
+      --border-color: #374151;
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+      --shadow-md: 0 2px 4px 0 rgba(0,0,0,0.3), 0 2px 6px 2px rgba(0,0,0,0.15);
+    }
+
+    /* Theme toggle styles */
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-toggle-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle-btn:hover {
+      background-color: var(--bg-secondary);
+    }
+
+    .theme-toggle-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-primary);
+    }
+
+    /* Channel list styles */
+    .channels-list {
+      margin-top: 16px;
+      background-color: var(--bg-primary);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .channels-list h4 {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: sticky;
+      top: 0;
+      background-color: var(--bg-primary);
+      padding-bottom: 8px;
+      z-index: 1;
+    }
+
+    .channels-list h4::before {
+      content: '📺';
+      font-size: 1.2rem;
+    }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: var(--bg-secondary);
+      margin-bottom: 8px;
+      transition: var(--transition);
+    }
+
+    .channel-item:hover {
+      transform: translateX(4px);
+    }
+
+    .channel-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0; /* Allows text to truncate */
+    }
+
+    .channel-name {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    .remove-channel-btn {
+      background-color: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0; /* Prevents button from shrinking */
+    }
+
+    .remove-channel-btn:hover {
+      background-color: var(--danger-hover);
+      transform: translateY(-1px);
+    }
+
+    .remove-channel-btn::before {
+      content: '×';
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+      width: 400px;
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    h4 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    input, button {
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    input {
+      width: 100%;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .channel-section {
+      margin-bottom: 20px;
+      background-color: var(--bg-primary);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+
+    .channel-section:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    iframe {
+      width: 100%;
+      height: 220px;
+      margin-top: 12px;
+      border-radius: 8px;
+      border: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .error {
+      color: var(--danger-color);
+      font-size: 0.9rem;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background-color: rgba(234, 67, 53, 0.1);
+      border-radius: 6px;
+    }
+
+    .success {
+      color: var(--success-color);
+      font-size: 0.9rem;
+      margin-top: 8px;
+      padding: 8px 12px;
+      background-color: rgba(15, 157, 88, 0.1);
+      border-radius: 6px;
+    }
+
+    .loading {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .channel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .remove-btn {
+      background-color: var(--danger-color);
+      color: white;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+    }
+
+    .remove-btn:hover {
+      background-color: var(--danger-hover);
+    }
+
+    .loading-spinner {
+      border: 3px solid rgba(66, 133, 244, 0.1);
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    #addChannelBtn {
+      white-space: nowrap;
+      padding: 10px 16px;
+    }
+
+    #uploadsContainer {
+      margin-top: 24px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 32px 20px;
+      background-color: var(--bg-primary);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Add some nice hover effects */
+    .channel-section {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .channel-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(66, 133, 244, 0.05), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+
+    .channel-section:hover::before {
+      transform: translateX(100%);
+    }
+
+    /* Add a subtle pulse animation for the loading state */
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
+    .loading {
+      animation: pulse 1.5s infinite;
+    }
+
+    /* Add a nice transition for the iframe */
+    iframe {
+      transition: var(--transition);
+    }
+
+    iframe:hover {
+      transform: scale(1.01);
+    }
+
+    .videos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .video-thumbnail {
+      position: relative;
+      aspect-ratio: 16/9;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-thumbnail::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      transition: var(--transition);
+    }
+
+    .video-thumbnail:hover::after {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .video-thumbnail:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .play-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .video-thumbnail:hover .play-button {
+      opacity: 1;
+    }
+
+    .play-button::before {
+      content: '';
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 8px 0 8px 14px;
+      border-color: transparent transparent transparent var(--primary-color);
+      margin-left: 4px;
+    }
+
+    .video-title {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      color: white;
+      font-size: 0.8rem;
+      line-height: 1.2;
+      z-index: 1;
+    }
+
+    .video-player {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+    }
+
+    .video-player.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .video-player iframe {
+      width: 90%;
+      height: 80%;
+      max-width: 1200px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .close-player {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .close-player:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .close-player::before,
+    .close-player::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 2px;
+      background-color: white;
+    }
+
+    .close-player::before {
+      transform: rotate(45deg);
+    }
+
+    .close-player::after {
+      transform: rotate(-45deg);
+    }
+
+    .keywords-section {
+      margin-top: 20px;
+      background-color: var(--bg-primary);
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .keywords-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .keywords-input-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .keywords-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .keyword-tag {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      padding: 4px 8px;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .keyword-tag .remove-keyword {
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 2px;
+    }
+
+    .keyword-tag .remove-keyword:hover {
+      color: var(--danger-color);
+    }
+
+    .notification-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 8px;
+      background-color: var(--bg-secondary);
+      border-radius: 8px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .videos-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) var(--bg-secondary);
+    }
+
+    .videos-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .videos-list::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+    }
+
+    .videos-list::-webkit-scrollbar-thumb {
+      background-color: var(--primary-color);
+      border-radius: 4px;
+    }
+
+    .video-item {
+      position: relative;
+      aspect-ratio: 16/9;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .video-item:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .video-thumbnail {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .video-item:hover .video-overlay {
+      opacity: 1;
+    }
+
+    .channel-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .video-title {
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .video-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+    }
+
+    .keyword-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background-color: rgba(66, 133, 244, 0.9);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .play-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .video-item:hover .play-icon {
+      opacity: 1;
+    }
+
+    .play-icon::before {
+      content: '';
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 12px 0 12px 20px;
+      border-color: transparent transparent transparent var(--primary-color);
+      margin-left: 6px;
+    }
+
+    .video-filter-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+      padding: 12px;
+      background-color: var(--bg-primary);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .filter-label {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .filter-options {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-option {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .filter-option.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .filter-option:not(.active) {
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .filter-option:not(.active):hover {
+      background-color: var(--border-color);
+    }
+
+    .channel-name {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-toggle">
+    <button class="theme-toggle-btn" id="themeToggle" title="Toggle Dark Mode">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+      </svg>
+    </button>
+  </div>
+
+  <h3 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; color: var(--text-primary);">Personalized YT Notifier</h3>
+
+  <div class="input-group">
+    <input type="text" id="channelInput" placeholder="Enter Channel ID" />
+    <button id="addChannelBtn">
+      <span>Add Channel</span>
+    </button>
+  </div>
+  <div id="message"></div>
+
+  <div class="channels-list" id="channelsList">
+    <h4>Added Channels</h4>
+    <div class="channels-container"></div>
+  </div>
+
+  <div class="keywords-section">
+    <div class="keywords-header">
+      <h4>🔍 Keyword Filters</h4>
+    </div>
+    <div class="keywords-input-group">
+      <input type="text" id="keywordInput" placeholder="Add keyword (e.g., Trailer, Tutorial)" />
+      <button id="addKeywordBtn">
+        <span>Add</span>
+      </button>
+    </div>
+    <div class="keywords-list" id="keywordsList"></div>
+    <div class="notification-toggle">
+      <span>Enable Notifications</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="notificationToggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="video-filter-toggle">
+    <span class="filter-label">Show:</span>
+    <div class="filter-options">
+      <div class="filter-option active" data-filter="all">All Videos</div>
+      <div class="filter-option" data-filter="keyword">Keyword Matches</div>
+    </div>
+  </div>
+
+  <div id="uploadsContainer">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <span>Loading recent uploads...</span>
+    </div>
+  </div>
+
+  <div class="video-player" id="videoPlayer">
+    <div class="close-player" id="closePlayer"></div>
+    <iframe id="playerFrame" allowfullscreen></iframe>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
