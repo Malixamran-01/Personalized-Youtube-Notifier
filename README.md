@@ -73,7 +73,7 @@ Use tools like [commentpicker.com/youtube-channel-id](https://commentpicker.com/
 
 | Dark Mode | Light Mode | No Channels (Dark) |
 |-----------|------------|--------------------|
-| ![Dark Mode](./screenshot-dark-1.png) | ![Light Mode](./screenshot-light-1.png) | ![No Channels](./screenshot-dark-empty.png) |
+| ![Dark Mode](Screenshots\Dark.png) | ![Light Mode](Screenshots\Light.png) | ![No Channels](\Screenshots\Dark-NoChannels.png) |
 
 - **Dark Mode:** Eye-friendly green accent, toggle in the top right, modern look.
 - **Light Mode:** Clean, bright, and easy to read.
