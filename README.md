@@ -55,7 +55,7 @@ Clean and responsive popup with intuitive controls for keyword management, notif
 
 ## 📦 Installation
 
-1. Clone or [download this repo](https://github.com/your-username/yt-custom-notifier).
+1. Clone or [download this repo](https://github.com/Malixamran-01/Personalized-Youtube-Notifier.git).
 2. Open **Chrome** and go to `chrome://extensions/`.
 3. Enable **Developer Mode** (top right).
 4. Click **Load unpacked** and select the project folder.
@@ -71,9 +71,29 @@ Use tools like [commentpicker.com/youtube-channel-id](https://commentpicker.com/
 
 ## 📸 UI Preview
 
-| Add Channels & Keywords | Filter by Matches |
-|-------------------------|-------------------|
-| ![UI](./screenshot.png) | ![UI](./screenshot.png) |
+| Dark Mode | Light Mode | No Channels (Dark) |
+|-----------|------------|--------------------|
+| ![Dark Mode](./screenshot-dark-1.png) | ![Light Mode](./screenshot-light-1.png) | ![No Channels](./screenshot-dark-empty.png) |
+
+- **Dark Mode:** Eye-friendly green accent, toggle in the top right, modern look.
+- **Light Mode:** Clean, bright, and easy to read.
+- **No Channels State:** Shows a clear message when no channels are added.
+
+---
+
+## 🌗 Dark Mode Toggle
+
+- Instantly switch between light and dark themes using the moon icon in the top right.
+- Dark mode uses a soft green accent for comfort.
+- Your theme preference is saved and persists between sessions.
+
+---
+
+## 🧩 Improved Channel Management
+
+- Added channels are listed with their names and a remove button for easy management.
+- No more clutter: Channel IDs are hidden for a cleaner look.
+- Remove channels instantly with a single click.
 
 ---
 
@@ -96,4 +116,4 @@ If you have a cool idea or want to improve UX, feel free to fork and submit a PR
 
 ## 📄 License
 
-MIT © 2025 [Malixamran]
+MIT © 2025 [Malixamran-01]
